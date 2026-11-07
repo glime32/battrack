@@ -71,7 +71,7 @@ if [ "$MAJ" = 1 ]; then
 fi
 
 echo
-systemctl --user --no-pager --lines=0 status battrack.service | head -3
+systemctl --user --no-pager --lines=0 status battrack.service | head -3 || true
 echo
 echo "OK. Commandes : battrack report | battrack copy | battrack now"
 echo "Mise à jour auto : active (2 min après l'ouverture de session, puis toutes les heures)."
