@@ -1,0 +1,18 @@
+[Unit]
+Description=battrack — traqueur de conso batterie ultra léger
+Documentation=https://github.com/glime32/battrack
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/battrack daemon
+Nice=19
+CPUSchedulingPolicy=idle
+IOSchedulingClass=idle
+TimerSlackNSec=2s
+MemoryMax=32M
+NoNewPrivileges=yes
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target

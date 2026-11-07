@@ -1,0 +1,8 @@
+[Unit]
+Description=battrack — mise à jour depuis GitHub
+
+[Service]
+Type=oneshot
+ExecStart=@DIR@/update.sh
+Nice=19
+IOSchedulingClass=idle

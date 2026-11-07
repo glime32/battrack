@@ -1,0 +1,7 @@
+{
+  "name": "com.glime.battrack",
+  "description": "battrack : CPU des processus Helium (lecture de /proc)",
+  "path": "@BIN@",
+  "type": "stdio",
+  "allowed_origins": ["chrome-extension://bnhemhhhnedjcdbafiliejghckbobddp/"]
+}

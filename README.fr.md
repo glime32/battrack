@@ -1,0 +1,81 @@
+# battrack
+
+Traqueur de conso ultra léger pour PC portable Linux, écrit en C (sans root, sans Python), et extension Helium/Chromium qui montre le CPU de chaque onglet.
+
+[English](README.md)
+
+Le démon se réveille une fois par minute, lit `/proc` et `/sys`, et cumule par appli **et** par contexte (batterie / secteur). Une commande sort un rapport court à coller à Claude (ou à lire toi-même) pour trouver ce qui vide la batterie.
+
+## Installer
+
+```fish
+curl -fsSL https://raw.githubusercontent.com/glime32/battrack/main/install.sh | bash
+```
+
+Ça compile, installe `~/.local/bin/battrack`, le démon systemd utilisateur, la mise à jour auto, l'hôte natif Helium et le lanceur KDE « Rapport batterie (copier) ».
+
+Extension : `chrome://extensions` → **Mode développeur** → **Charger l'extension non empaquetée** → `~/battrack/extension`. Épingle l'icône bleue.
+
+Facultatif, pour mesurer la conso **même branché** (RAPL lisible par ton groupe) :
+
+```fish
+echo 'ACTION=="add", SUBSYSTEM=="powercap", KERNEL=="intel-rapl:0|intel-rapl:1", RUN+="/usr/bin/chgrp '(id -gn)' /sys%p/energy_uj", RUN+="/usr/bin/chmod 0440 /sys%p/energy_uj"' | sudo tee /etc/udev/rules.d/99-rapl.rules
+sudo udevadm control --reload && sudo udevadm trigger --action=add --subsystem-match=powercap
+```
+
+Compromis : lire l'énergie sans être root permet en théorie des attaques par canal auxiliaire (Platypus). Acceptable sur un PC perso.
+
+## Utiliser
+
+| Quoi | Commande |
+|---|---|
+| Rapport court à envoyer à Claude | `battrack copy` (presse-papier) ou menu KDE « Rapport batterie (copier) » |
+| Voir le rapport | `battrack report` |
+| Dernière minute (watts, mode, top applis) | `battrack now` |
+| Remettre à zéro (après une optimisation) | `battrack reset` |
+| Coût du démon + puissance instantanée | `battrack bench` |
+
+Extension : clic sur l'icône → CPU par onglet (live, 10 min, 1 h), RAM, watts du PC, 💤 pour endormir un onglet, **📋 Copier log**.
+
+## Ce qui est mesuré
+
+Tout est compté **deux fois en parallèle** : colonne BATTERIE et colonne SECTEUR.
+
+- par appli : CPU, GPU (3D + vidéo, pilote xe), réveils/s, part estimée de la conso (W~)
+- puissance : batterie, RAPL psys (PC entier, marche aussi branché) et package (CPU+GPU+RAM), repos, p10/p90
+- dans le temps : luminosité, écran éteint, rétroéclairage clavier, wifi/bluetooth allumés, wifi connecté,
+  mode énergie (platform_profile + EPP) avec les watts moyens de chaque mode
+- système : C-états, S0ix, GPU au repos, veille, sessions batterie, autonomie (et « si débranché » côté secteur)
+- config au moment du rapport : profil, EPP, écran Hz, wifi power-save, PCI runtime PM, démons connus, cmdline noyau
+- Helium : chaque processus est relié à son onglet (`--renderer-client-id` = `processId` de `webNavigation`)
+
+## Coût
+
+- Démon : 1 réveil / minute, ~2 ms CPU par réveil (≈ 0,004 % d'un cœur), ~0,5 Mo RAM,
+  SCHED_IDLE + nice 19, timer slack 2 s, écriture disque toutes les 15 min sur batterie (le reste en RAM).
+- Extension : **rien** quand le panneau est fermé (pas de service worker). Panneau ouvert : une lecture de /proc toutes les 2 s.
+- Mise à jour auto : un `git fetch` par heure.
+
+## Mise à jour auto
+
+`battrack-maj.timer` tourne 2 min après l'ouverture de session puis toutes les heures. S'il y a du nouveau sur `main`, il avance le dépôt, recompile, relance le démon (seulement si le programme a changé) et envoie une notification. Des modifications locales bloquent la mise à jour : rien n'est écrasé.
+
+L'extension est chargée depuis le dépôt, ses fichiers se mettent donc à jour tout seuls (rouvre le panneau). Si `manifest.json` change, clique « recharger » dans `chrome://extensions`.
+
+## Fichiers
+
+- état : `~/.local/state/battrack/state.tsv` · live : `$XDG_RUNTIME_DIR/battrack/` (en RAM)
+- services : `~/.config/systemd/user/battrack.service`, `battrack-maj.service`, `battrack-maj.timer`
+- hôte natif : `~/.config/net.imput.helium/NativeMessagingHosts/com.glime.battrack.json`
+
+## Désinstaller
+
+```fish
+~/battrack/uninstall.sh          # --tout efface aussi l'historique
+```
+
+Testé sur Lenovo Yoga 7 2-in-1 14ILL10 (Core Ultra 7 258V, GPU xe), CachyOS, KDE Plasma 6 (Wayland), Helium.
+
+## Licence
+
+MIT

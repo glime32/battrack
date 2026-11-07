@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Conso des onglets</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <div class="kpi"><b id="k-cpu">–</b><span>CPU Helium</span></div>
+    <div class="kpi"><b id="k-pw">–</b><span id="k-pw-l">PC</span></div>
+    <div class="kpi"><b id="k-tabs">–</b><span id="k-tabs-l">onglets</span></div>
+    <div class="actions">
+      <button id="sleep-all" title="Met en veille les onglets en arrière-plan (sauf audio et épinglés). Ils se rechargent au clic.">💤 Veille arrière-plan</button>
+      <button id="copy" class="primary" title="Copie un résumé court à coller à Claude">📋 Copier log</button>
+    </div>
+  </header>
+
+  <div id="msg" class="msg" hidden></div>
+
+  <main>
+    <table id="tabs">
+      <thead>
+        <tr>
+          <th data-k="title" class="l">Onglet</th>
+          <th data-k="live" title="CPU des 2 dernières secondes">Live</th>
+          <th data-k="m10" title="Moyenne 10 dernières minutes (démon)">10 min</th>
+          <th data-k="m60" title="Moyenne dernière heure (démon)">1 h</th>
+          <th data-k="rss" title="Mémoire du processus (partagée entre onglets du même site)">RAM</th>
+          <th class="act"></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <h2>Interne Helium</h2>
+    <table id="intern">
+      <thead>
+        <tr><th class="l">Processus</th><th>Live</th><th>10 min</th><th>1 h</th><th>RAM</th><th class="act"></th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
+
+  <footer>
+    <span>CPU en % d'un cœur · màj toutes les 2 s · ≈ = processus partagé entre onglets</span>
+    <span id="daemon"></span>
+  </footer>
+  <script src="popup.js"></script>
+</body>
+</html>

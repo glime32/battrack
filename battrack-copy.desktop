@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Rapport batterie (copier)
+Comment=Copie le rapport battrack dans le presse-papier pour Claude
+Exec=@BIN@ copy
+Icon=battery
+Terminal=false
+Categories=System;Utility;
