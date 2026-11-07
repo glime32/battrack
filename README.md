@@ -1,8 +1,10 @@
-# battrack
+<p align="center"><img src="docs/banner-battrack.png" alt="battrack" width="100%"></p>
+
+<p align="center"><img src="https://img.shields.io/badge/platform-Linux%20laptop-000000?style=flat-square" alt="platform"> <img src="https://img.shields.io/badge/C-no%20root-3949ab?style=flat-square" alt="C"> <img src="https://img.shields.io/badge/license-MIT-610089?style=flat-square" alt="license"></p>
 
 Ultra-light power tracker for Linux laptops, written in C (no root, no Python), plus a Helium/Chromium extension that shows CPU per tab.
 
-[Français](README.fr.md)
+<p align="center"><a href="README.fr.md">🇫🇷 Version française</a></p>
 
 The daemon wakes up once a minute, reads `/proc` and `/sys`, and keeps totals per app **and** per context (on battery / plugged in). One command prints a short report you can paste to Claude (or read yourself) to find what drains the battery.
 
@@ -24,6 +26,10 @@ sudo udevadm control --reload && sudo udevadm trigger --action=add --subsystem-m
 ```
 
 Trade-off: unprivileged energy readings make power side channels (Platypus) possible. Fine on a personal laptop.
+
+<p align="center"><img src="docs/battrack-now.png" width="760" alt="battrack now"><br><sub>battrack now: the last minute</sub></p>
+
+<p align="center"><img src="docs/battrack-extension.png" width="560" alt="extension"><br><sub>the extension: CPU per tab (sample tab titles)</sub></p>
 
 ## Use
 

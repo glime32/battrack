@@ -1,8 +1,10 @@
-# battrack
+<p align="center"><img src="docs/banner-battrack.png" alt="battrack" width="100%"></p>
+
+<p align="center"><img src="https://img.shields.io/badge/platform-Linux%20laptop-000000?style=flat-square" alt="platform"> <img src="https://img.shields.io/badge/C-no%20root-3949ab?style=flat-square" alt="C"> <img src="https://img.shields.io/badge/license-MIT-610089?style=flat-square" alt="license"></p>
 
 Traqueur de conso ultra léger pour PC portable Linux, écrit en C (sans root, sans Python), et extension Helium/Chromium qui montre le CPU de chaque onglet.
 
-[English](README.md)
+<p align="center"><a href="README.md">🇬🇧 English version</a></p>
 
 Le démon se réveille une fois par minute, lit `/proc` et `/sys`, et cumule par appli **et** par contexte (batterie / secteur). Une commande sort un rapport court à coller à Claude (ou à lire toi-même) pour trouver ce qui vide la batterie.
 
@@ -24,6 +26,10 @@ sudo udevadm control --reload && sudo udevadm trigger --action=add --subsystem-m
 ```
 
 Compromis : lire l'énergie sans être root permet en théorie des attaques par canal auxiliaire (Platypus). Acceptable sur un PC perso.
+
+<p align="center"><img src="docs/battrack-now.png" width="760" alt="battrack now"><br><sub>battrack now : la dernière minute</sub></p>
+
+<p align="center"><img src="docs/battrack-extension.png" width="560" alt="extension"><br><sub>l'extension : CPU de chaque onglet (titres d'exemple)</sub></p>
 
 ## Utiliser
 
