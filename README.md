@@ -43,6 +43,8 @@ Trade-off: unprivileged energy readings make power side channels (Platypus) poss
 
 Extension: click the icon → CPU per tab (live, 10 min, 1 h), RAM, laptop watts, 💤 to discard a tab, **📋 Copy log**.
 
+Auto-sleep (on by default, toggle at the bottom of the popup): on battery, a background tab above 4 % of a core for two minutes in a row is discarded. Never the visible tab, a tab playing sound, a pinned tab or an excepted site (claude.ai, Meet, Zoom, Discord, YouTube Music, SoundCloud to start with; 🚫 adds one).
+
 ## What it measures
 
 Everything is counted **twice, side by side**: a BATTERY column and a PLUGGED-IN column.
@@ -59,7 +61,7 @@ Everything is counted **twice, side by side**: a BATTERY column and a PLUGGED-IN
 
 - Daemon: one wakeup per minute, ~2 ms CPU each (≈ 0.004 % of a core), ~0.5 MB RAM,
   SCHED_IDLE + nice 19, 2 s timer slack, disk write every 15 min on battery (live data stays in RAM).
-- Extension: **nothing** while the popup is closed (no service worker). Popup open: one /proc read every 2 s.
+- Extension: popup closed, one wakeup per minute for auto-sleep (on AC it stops right after reading the battery state). Popup open: one /proc read every 2 s.
 - Auto-update: one `git fetch` per hour.
 
 ## Auto-update

@@ -1,7 +1,7 @@
 'use strict';
-// Panneau "conso des onglets". Ne tourne que quand le panneau est ouvert :
-// aucune tâche de fond, aucun service worker. Les chiffres viennent de
-// battrack (hôte natif) qui lit /proc ; l'historique 10 min / 1 h vient du démon.
+// Panneau "conso des onglets". Ne tourne que quand le panneau est ouvert.
+// Les chiffres viennent de battrack (hôte natif) qui lit /proc ; l'historique
+// 10 min / 1 h vient du démon. La veille auto sur batterie vit dans auto.js.
 
 const HOST = 'com.glime.battrack';
 const $ = (s) => document.querySelector(s);
@@ -319,6 +319,100 @@ function render() {
   }
 }
 
+/* ---------- veille auto sur batterie (réglages lus et écrits ici, travail dans auto.js) ---------- */
+
+let auto = null;
+
+function ilya(ms) {
+  const m = Math.round((Date.now() - ms) / 60e3);
+  if (m < 1) return 'à l’instant';
+  if (m < 60) return `il y a ${m} min`;
+  const h = Math.round(m / 60);
+  return h < 24 ? `il y a ${h} h` : 'hier ou avant';
+}
+
+function miniBtn(text, label, onClick) {
+  const b = document.createElement('button');
+  b.className = 'mini';
+  b.textContent = text;
+  b.title = label;
+  b.setAttribute('aria-label', label);
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+async function saveAuto(change) {
+  change(auto);
+  await chrome.storage.local.set({ auto });
+  renderAuto();
+}
+
+function renderAuto() {
+  if (!auto) return;
+  const f = document.createDocumentFragment();
+
+  const tr = document.createElement('tr');
+  const etat = cell(
+    auto.on
+      ? 'Activée : un onglet en arrière-plan à plus de 4 % pendant 2 min est endormi (jamais l’onglet affiché, le son, les épinglés, les exceptions).'
+      : 'Coupée : aucun onglet n’est endormi automatiquement.',
+    'l wrap'
+  );
+  etat.colSpan = 3;
+  const act = cell('', 'act');
+  act.append(miniBtn(auto.on ? 'Couper' : 'Activer', auto.on ? 'Couper la veille auto' : 'Activer la veille auto', () => saveAuto((a) => (a.on = !a.on))));
+  tr.append(etat, act);
+  f.append(tr);
+
+  for (const e of auto.log || []) {
+    const r = document.createElement('tr');
+    const td = cell('', 'l');
+    td.title = e.titre;
+    const row = document.createElement('div');
+    row.className = 'row';
+    const tt = document.createElement('span');
+    tt.className = 'tt';
+    tt.textContent = e.titre;
+    const dom = document.createElement('span');
+    dom.className = 'dom';
+    dom.textContent = e.site;
+    row.append(tt, dom);
+    td.append(row);
+    const a = cell('', 'act');
+    a.append(
+      miniBtn('🚫', 'Ne plus jamais endormir ' + e.site, () =>
+        saveAuto((x) => {
+          if (!x.except.includes(e.site)) x.except.push(e.site);
+          x.log = x.log.filter((l) => l.site !== e.site);
+        })
+      )
+    );
+    r.append(td, cell(ilya(e.quand), 'dim'), num(e.cpu), a);
+    f.append(r);
+  }
+
+  for (const h of auto.except || []) {
+    const r = document.createElement('tr');
+    const a = cell('', 'act');
+    a.append(miniBtn('✕', 'Retirer ' + h + ' des exceptions', () => saveAuto((x) => (x.except = x.except.filter((y) => y !== h)))));
+    r.append(cell(h, 'l'), cell('jamais', 'dim'), cell('–', 'dim'), a);
+    f.append(r);
+  }
+
+  $('#auto tbody').replaceChildren(f);
+}
+
+chrome.storage.local.get('auto').then(({ auto: a }) => {
+  auto = a || { on: true, except: [], log: [] };
+  renderAuto();
+});
+chrome.storage.onChanged.addListener((ch, zone) => {
+  if (zone === 'local' && ch.auto?.newValue) {
+    auto = ch.auto.newValue;
+    renderAuto();
+  }
+});
+
 /* ---------- log à copier ---------- */
 
 function buildLog() {
@@ -343,6 +437,10 @@ function buildLog() {
   if (awake.length > top.length) L.push(`… +${awake.length - top.length} onglets plus calmes`);
   L.push('interne: ' + groups.map((g) => `${g.short}${g.n > 1 ? '×' + g.n : ''} ${fmt(g.live)}/${fmt(g.m10)}/${fmt(g.m60)}`).join(' · '));
   if (s.flags) L.push('flags gpu: ' + s.flags.slice(0, 300));
+  if (auto) {
+    const v = (auto.log || []).map((e) => `${e.site} ${fmt(e.cpu)} (${ilya(e.quand)})`).join(' · ');
+    L.push(`veille auto: ${auto.on ? 'oui' : 'NON'}${v ? ' · ' + v : ''}`);
+  }
   L.push('### fin');
   return L.join('\n');
 }

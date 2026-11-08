@@ -43,6 +43,8 @@ Compromis : lire l'énergie sans être root permet en théorie des attaques par 
 
 Extension : clic sur l'icône → CPU par onglet (live, 10 min, 1 h), RAM, watts du PC, 💤 pour endormir un onglet, **📋 Copier log**.
 
+Veille auto (activée par défaut, réglage en bas du panneau) : sur batterie, un onglet en arrière-plan qui dépasse 4 % d'un cœur deux minutes de suite est endormi. Jamais l'onglet affiché, un onglet qui joue du son, un onglet épinglé ni les sites en exception (claude.ai, Meet, Zoom, Discord, YouTube Music, SoundCloud au départ ; 🚫 en ajoute un).
+
 ## Ce qui est mesuré
 
 Tout est compté **deux fois en parallèle** : colonne BATTERIE et colonne SECTEUR.
@@ -59,7 +61,7 @@ Tout est compté **deux fois en parallèle** : colonne BATTERIE et colonne SECTE
 
 - Démon : 1 réveil / minute, ~2 ms CPU par réveil (≈ 0,004 % d'un cœur), ~0,5 Mo RAM,
   SCHED_IDLE + nice 19, timer slack 2 s, écriture disque toutes les 15 min sur batterie (le reste en RAM).
-- Extension : **rien** quand le panneau est fermé (pas de service worker). Panneau ouvert : une lecture de /proc toutes les 2 s.
+- Extension : panneau fermé, un réveil par minute pour la veille auto (sur secteur il s'arrête après avoir lu l'état de la batterie). Panneau ouvert : une lecture de /proc toutes les 2 s.
 - Mise à jour auto : un `git fetch` par heure.
 
 ## Mise à jour auto

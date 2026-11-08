@@ -112,6 +112,7 @@ td.l .tt { overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 td.l .tt:hover { text-decoration: underline; }
 td.l .dom { color: var(--mut); font-size: 11px; flex: none; }
 td.l .fl { flex: none; font-size: 11px; }
+td.l.wrap { white-space: normal; max-width: none; color: var(--mut); }
 
 td.live { background: linear-gradient(to left, var(--bar) var(--w, 0%), transparent var(--w, 0%)); }
 .mid { color: var(--warn); font-weight: 600; }

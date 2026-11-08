@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Battrack — conso des onglets",
-  "version": "1.0",
-  "description": "CPU et RAM par onglet, sans rien consommer quand le panneau est fermé (lit /proc via battrack).",
+  "version": "1.1",
+  "description": "CPU et RAM par onglet (lit /proc via battrack). Sur batterie, endort les onglets en arrière-plan qui mangent du CPU.",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAu/6Z3iGH92/9KyvbqP5MTH+vbiX2MAD4O05fL2rrkRYIm1SiCPUlMPeADVX+kSdVcGTy0fhFcKIyQFD1yx5rJcd+yr9/t7VDn0G0pFs+uzKKi5VQxWAT3YXdLnZnc+7QCftpMFyM4aaKgdnUjlg9QpBFhM4ml9mkf+uDPZyou2V/osJ5uxDv/48WBWCGO0jKyGV04STLn4smmqRl/lwbHcZkNL2TqoJS5obzb5xNadf1y4CIBJr5dGaWCpNy71yzO00T3N6NIeVWOIlwmlNIiD2wxkxQkep/8k3z8DV2FZvM1uZihH7hNALL2XKjDdmvlr/lo4Gf4/BFgsOQ1mfrgwIDAQAB",
-  "permissions": ["tabs", "webNavigation", "nativeMessaging", "favicon"],
+  "permissions": ["tabs", "webNavigation", "nativeMessaging", "favicon", "alarms", "storage"],
+  "background": { "service_worker": "auto.js" },
   "action": {
     "default_popup": "popup.html",
     "default_title": "Conso des onglets",
