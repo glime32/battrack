@@ -7,7 +7,8 @@ const HOST = 'com.glime.battrack';
 const SEUIL = 4; // % d'un cœur, en moyenne sur la dernière minute
 const FOIS = 2; // passages de suite au-dessus du seuil avant la veille
 const QUITTE = 2 * 60e3; // onglet quitté depuis au moins 2 min
-const PERIODE = 1; // minutes entre deux passages
+const PERIODE = 1; // minutes entre deux passages, sur batterie
+const SECTEUR = 5; // sur secteur, on repasse juste de temps en temps voir si c'est débranché
 const GARDER = 8; // entrées gardées dans le journal du panneau
 const EXCEPTIONS = ['claude.ai', 'meet.google.com', 'zoom.us', 'discord.com', 'music.youtube.com', 'soundcloud.com'];
 
@@ -49,7 +50,7 @@ chrome.alarms.onAlarm.addListener((al) => {
 function cpuDe(p, avant, s) {
   const q = avant?.tk[p.pid];
   const dt = avant ? (s.t - avant.t) / 1000 : 0;
-  if (q != null && dt > 20 && dt < 300) return Math.max(0, ((p.tk - q) / s.hz / dt) * 100);
+  if (q != null && dt > 20 && dt < 400) return Math.max(0, ((p.tk - q) / s.hz / dt) * 100);
   return typeof p.m1 === 'number' ? p.m1 : null;
 }
 
@@ -62,6 +63,10 @@ async function passage() {
   const tk = {};
   for (const p of s.procs) tk[p.pid] = p.tk;
   await chrome.storage.session.set({ avant: { t: s.t, tk } });
+
+  const voulu = s.bat ? PERIODE : SECTEUR;
+  const al = await chrome.alarms.get('veille');
+  if (!al || al.periodInMinutes !== voulu) chrome.alarms.create('veille', { periodInMinutes: voulu });
 
   if (!s.bat) {
     if (Object.keys(coups).length) await chrome.storage.session.set({ coups: {} });
