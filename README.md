@@ -61,7 +61,7 @@ Everything is counted **twice, side by side**: a BATTERY column and a PLUGGED-IN
 
 ## Cost
 
-- Daemon: one wakeup per minute, ~4 ms CPU each (≈ 0.007 % of a core), ~1 MB RAM,
+- Daemon: one wakeup per minute, ~4 ms CPU each (≈ 0.007 % of a core), ~3 MB RAM,
   SCHED_IDLE + nice 19, 2 s timer slack, disk write every 15 min on battery (live data stays in RAM).
 - Extension: popup closed, auto-sleep wakes once a minute on battery and once every 5 min on AC (just long enough to read the battery state). Popup open: one /proc read every 2 s.
 - Auto-update: one `git fetch` per hour.

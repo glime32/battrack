@@ -61,7 +61,7 @@ Tout est compté **deux fois en parallèle** : colonne BATTERIE et colonne SECTE
 
 ## Coût
 
-- Démon : 1 réveil / minute, ~4 ms CPU par réveil (≈ 0,007 % d'un cœur), ~1 Mo RAM,
+- Démon : 1 réveil / minute, ~4 ms CPU par réveil (≈ 0,007 % d'un cœur), ~3 Mo RAM,
   SCHED_IDLE + nice 19, timer slack 2 s, écriture disque toutes les 15 min sur batterie (le reste en RAM).
 - Extension : panneau fermé, la veille auto se réveille une fois par minute sur batterie, une fois toutes les 5 min sur secteur (juste le temps de lire l'état de la batterie). Panneau ouvert : une lecture de /proc toutes les 2 s.
 - Mise à jour auto : un `git fetch` par heure.
