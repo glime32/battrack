@@ -6,7 +6,7 @@
 main() {
   set -uo pipefail
   cd "$(dirname "$(readlink -f "$0")")" || return 0
-  git fetch --quiet origin 2>/dev/null || return 0 # pas de réseau : prochain tour
+  timeout 20 git fetch --quiet origin 2>/dev/null || return 0 # pas de réseau : prochain tour
   local up
   up=$(git rev-parse --verify --quiet '@{u}') || return 0
   [ "$(git rev-parse HEAD)" = "$up" ] && return 0
