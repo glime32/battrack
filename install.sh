@@ -12,7 +12,7 @@ MAJ=0
 
 # Lancé via curl | bash : on récupère le dépôt, puis on relance depuis le dossier
 SRC="$(dirname "$(readlink -f "${BASH_SOURCE[0]:-$0}")")"
-if [ ! -f "$SRC/battrack.c" ]; then
+if [ ! -f "$SRC/Cargo.toml" ]; then
   command -v git >/dev/null || { echo "Installe git d'abord : sudo pacman -S git"; exit 1; }
   if [ -d "$DIR/.git" ]; then
     git -C "$DIR" pull --ff-only --quiet
@@ -29,12 +29,13 @@ BIN="$HOME/.local/bin/battrack"
 UNIT="$HOME/.config/systemd/user"
 
 say "→ compilation"
-cc -O2 -pipe -Wall -Wextra -Wno-format-truncation -o battrack.tmp battrack.c # si ça échoue, l'ancien binaire reste
+command -v cargo >/dev/null || { echo "Installe Rust d'abord : sudo pacman -S rust"; exit 1; }
+# si ça échoue, l'ancien binaire reste en place
+nice -n 19 cargo build --release --locked --quiet --offline 2>/dev/null || nice -n 19 cargo build --release --locked --quiet
 mkdir -p "$HOME/.local/bin"
 CHANGED=1
-if [ -f "$BIN" ] && cmp -s battrack.tmp "$BIN"; then CHANGED=0; fi
-if [ "$CHANGED" = 1 ]; then install -m755 battrack.tmp "$BIN.new" && mv -f "$BIN.new" "$BIN"; fi
-rm -f battrack.tmp
+if [ -f "$BIN" ] && cmp -s target/release/battrack "$BIN"; then CHANGED=0; fi
+if [ "$CHANGED" = 1 ]; then install -m755 target/release/battrack "$BIN.new" && mv -f "$BIN.new" "$BIN"; fi
 
 say "→ services systemd (utilisateur)"
 mkdir -p "$UNIT"

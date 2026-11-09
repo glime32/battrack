@@ -1,0 +1,17 @@
+[package]
+name = "battrack"
+version = "1.2.0"
+edition = "2021"
+license = "MIT"
+description = "Traqueur de conso ultra léger pour PC portable Linux"
+publish = false
+
+[dependencies]
+libc = "0.2"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
