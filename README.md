@@ -1,8 +1,8 @@
 <p align="center"><img src="docs/banner-battrack.png" alt="battrack" width="100%"></p>
 
-<p align="center"><img src="https://img.shields.io/badge/platform-Linux%20laptop-000000?style=flat-square" alt="platform"> <img src="https://img.shields.io/badge/C-no%20root-3949ab?style=flat-square" alt="C"> <img src="https://img.shields.io/badge/license-MIT-610089?style=flat-square" alt="license"></p>
+<p align="center"><img src="https://img.shields.io/badge/platform-Linux%20laptop-000000?style=flat-square" alt="platform"> <img src="https://img.shields.io/badge/Rust-no%20root-b7410e?style=flat-square" alt="Rust"> <img src="https://img.shields.io/badge/license-MIT-610089?style=flat-square" alt="license"></p>
 
-Ultra-light power tracker for Linux laptops, written in C (no root, no Python), plus a Helium/Chromium extension that shows CPU per tab.
+Ultra-light power tracker for Linux laptops, written in Rust (no root, no Python), plus a Helium/Chromium extension that shows CPU per tab.
 
 <p align="center"><a href="README.fr.md">🇫🇷 Version française</a></p>
 
@@ -50,16 +50,18 @@ Auto-sleep (on by default, toggle at the bottom of the popup): on battery, a bac
 Everything is counted **twice, side by side**: a BATTERY column and a PLUGGED-IN column.
 
 - per app: CPU, GPU (3D + video, xe driver fdinfo), wakeups/s, estimated share of power (W~)
-- power: battery, RAPL psys (whole platform, works on AC too) and package (CPU+GPU+RAM), idle floor, p10/p90
+- processes too short-lived to be sampled: recovered from cgroup CPU time (`[courts] konsole`, `[courts] claude-code`…), IRQ time on its own row
+- nameless scripts (`python3 -c`, heredocs) are named after whoever launched them, e.g. `python3:-c [claude]`
+- power: battery, RAPL psys (whole platform, works on AC too, charging time excluded) and package (CPU+GPU+RAM), idle floor, p10/p90
 - over time: screen brightness, screen off, keyboard backlight, wifi/bluetooth on, wifi connected,
   power mode (platform_profile + EPP) with average watts per mode
-- system: C-states, S0ix, GPU idle, suspend drain, battery sessions, runtime estimate
+- system: C-states, GPU idle, suspend drain and share of suspend spent in hardware sleep (S0ix), battery sessions, runtime estimate
 - config at report time: profile, EPP, refresh rate, wifi power save, PCI runtime PM, known daemons, kernel cmdline
 - Helium: each process is mapped to its tab (`--renderer-client-id` = `webNavigation` `processId`)
 
 ## Cost
 
-- Daemon: one wakeup per minute, ~2 ms CPU each (≈ 0.004 % of a core), ~0.5 MB RAM,
+- Daemon: one wakeup per minute, ~4 ms CPU each (≈ 0.007 % of a core), ~1 MB RAM,
   SCHED_IDLE + nice 19, 2 s timer slack, disk write every 15 min on battery (live data stays in RAM).
 - Extension: popup closed, auto-sleep wakes once a minute on battery and once every 5 min on AC (just long enough to read the battery state). Popup open: one /proc read every 2 s.
 - Auto-update: one `git fetch` per hour.

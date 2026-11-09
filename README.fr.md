@@ -1,8 +1,8 @@
 <p align="center"><img src="docs/banner-battrack.png" alt="battrack" width="100%"></p>
 
-<p align="center"><img src="https://img.shields.io/badge/platform-Linux%20laptop-000000?style=flat-square" alt="platform"> <img src="https://img.shields.io/badge/C-no%20root-3949ab?style=flat-square" alt="C"> <img src="https://img.shields.io/badge/license-MIT-610089?style=flat-square" alt="license"></p>
+<p align="center"><img src="https://img.shields.io/badge/platform-Linux%20laptop-000000?style=flat-square" alt="platform"> <img src="https://img.shields.io/badge/Rust-no%20root-b7410e?style=flat-square" alt="Rust"> <img src="https://img.shields.io/badge/license-MIT-610089?style=flat-square" alt="license"></p>
 
-Traqueur de conso ultra léger pour PC portable Linux, écrit en C (sans root, sans Python), et extension Helium/Chromium qui montre le CPU de chaque onglet.
+Traqueur de conso ultra léger pour PC portable Linux, écrit en Rust (sans root, sans Python), et extension Helium/Chromium qui montre le CPU de chaque onglet.
 
 <p align="center"><a href="README.md">🇬🇧 English version</a></p>
 
@@ -50,16 +50,18 @@ Veille auto (activée par défaut, réglage en bas du panneau) : sur batterie, u
 Tout est compté **deux fois en parallèle** : colonne BATTERIE et colonne SECTEUR.
 
 - par appli : CPU, GPU (3D + vidéo, pilote xe), réveils/s, part estimée de la conso (W~)
-- puissance : batterie, RAPL psys (PC entier, marche aussi branché) et package (CPU+GPU+RAM), repos, p10/p90
+- processus trop brefs pour être vus : retrouvés par cgroup (`[courts] konsole`, `[courts] claude-code`…), IRQ à part
+- scripts sans nom (`python3 -c`, heredoc) : nommés d'après qui les lance, par ex. `python3:-c [claude]`
+- puissance : batterie, RAPL psys (PC entier, marche aussi branché, hors temps de charge) et package (CPU+GPU+RAM), repos, p10/p90
 - dans le temps : luminosité, écran éteint, rétroéclairage clavier, wifi/bluetooth allumés, wifi connecté,
   mode énergie (platform_profile + EPP) avec les watts moyens de chaque mode
-- système : C-états, S0ix, GPU au repos, veille, sessions batterie, autonomie (et « si débranché » côté secteur)
+- système : C-états, GPU au repos, veille (conso et part en sommeil matériel S0ix), sessions batterie, autonomie (et « si débranché » côté secteur)
 - config au moment du rapport : profil, EPP, écran Hz, wifi power-save, PCI runtime PM, démons connus, cmdline noyau
 - Helium : chaque processus est relié à son onglet (`--renderer-client-id` = `processId` de `webNavigation`)
 
 ## Coût
 
-- Démon : 1 réveil / minute, ~2 ms CPU par réveil (≈ 0,004 % d'un cœur), ~0,5 Mo RAM,
+- Démon : 1 réveil / minute, ~4 ms CPU par réveil (≈ 0,007 % d'un cœur), ~1 Mo RAM,
   SCHED_IDLE + nice 19, timer slack 2 s, écriture disque toutes les 15 min sur batterie (le reste en RAM).
 - Extension : panneau fermé, la veille auto se réveille une fois par minute sur batterie, une fois toutes les 5 min sur secteur (juste le temps de lire l'état de la batterie). Panneau ouvert : une lecture de /proc toutes les 2 s.
 - Mise à jour auto : un `git fetch` par heure.
