@@ -92,9 +92,16 @@ impl Tracker {
                 self.last_psys_w = js.map(|j| j / dt);
             }
             if susp >= 5.0 {
-                if let (Some(a), Some(b)) = (s.hw_sleep, p.hw_sleep) {
+                // suspend_stats/total_hw_sleep is fed through a 32-bit value: it wraps every
+                // 71 minutes, so a whole night read as a few minutes of deep sleep. The LPIT
+                // counter measures the same thing on 64 bits.
+                let slept = match (s.lpi, p.lpi) {
+                    (Some(a), Some(b)) => Some(a - b),
+                    _ => s.hw_sleep.zip(p.hw_sleep).map(|(a, b)| a - b),
+                };
+                if let Some(us) = slept {
                     self.acc.sleep_s += susp;
-                    self.acc.sleep_hw_s += ((a - b) / 1e6).clamp(0.0, susp);
+                    self.acc.sleep_hw_s += (us / 1e6).clamp(0.0, susp);
                 }
             }
             if let Some(ci) = ci {
