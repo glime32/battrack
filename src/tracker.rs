@@ -1,6 +1,6 @@
 use std::fmt::Write as _;
 
-use crate::hw::{mode_short, rapl_delta, Hw, Sys};
+use crate::hw::{mode_short, plugged, rapl_delta, wake_irq, Hw, Sys};
 use crate::procs::{Apps, Scanner, RING};
 use crate::state::*;
 use crate::util::*;
@@ -61,6 +61,30 @@ impl Tracker {
         }
     }
 
+    /// One line per suspend in veilles.tsv: the totals cannot tell a quiet night from one
+    /// that fed a phone or kept waking up.
+    fn log_suspend(&self, s: &Sys, p: &Sys, susp: f64, deep: Option<f64>) {
+        let drained = match (p.on_bat && s.on_bat, p.ewh, s.ewh) {
+            (true, Some(before), Some(after)) if before >= after => Some(before - after),
+            _ => None,
+        };
+        let or_dash = |v: Option<String>| v.unwrap_or_else(|| "-".to_string());
+        let line = format!(
+            "{}\t{susp:.0}\t{}\t{}\t{}\t{}\t{}\n",
+            unix_now(),
+            or_dash(deep.map(|d| format!("{d:.0}"))),
+            or_dash(drained.map(|wh| format!("{wh:.3}"))),
+            or_dash(drained.map(|wh| format!("{:.2}", wh * 3600.0 / susp))),
+            wake_irq(),
+            plugged(),
+        );
+        let path = format!("{}/veilles.tsv", self.paths.state_dir);
+        let header = if exists(&path) { "" } else { "fin\tduree_s\tprofond_s\tWh\tW\treveil\tbranche\n" };
+        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(&path) {
+            let _ = std::io::Write::write_all(&mut file, format!("{header}{line}").as_bytes());
+        }
+    }
+
     pub fn step(&mut self) {
         let s = self.hw.sample(&mut self.statbuf);
         let prev = self.prev.take();
@@ -102,6 +126,9 @@ impl Tracker {
                 if let Some(us) = slept {
                     self.acc.sleep_s += susp;
                     self.acc.sleep_hw_s += (us / 1e6).clamp(0.0, susp);
+                }
+                if susp >= 60.0 && !self.nowrite {
+                    self.log_suspend(&s, &p, susp, slept.map(|us| (us / 1e6).clamp(0.0, susp)));
                 }
             }
             if let Some(ci) = ci {

@@ -75,6 +75,7 @@ L'extension est chargée depuis le dépôt, ses fichiers se mettent donc à jour
 ## Fichiers
 
 - état : `~/.local/state/battrack/state.tsv` · live : `$XDG_RUNTIME_DIR/battrack/` (en RAM)
+- veilles : `~/.local/state/battrack/veilles.tsv`, une ligne par veille d'une minute ou plus (fin, durée, sommeil profond, Wh, W, ce qui a réveillé, ce qui était branché)
 - services : `~/.config/systemd/user/battrack.service`, `battrack-maj.service`, `battrack-maj.timer`
 - hôte natif : `~/.config/net.imput.helium/NativeMessagingHosts/com.glime.battrack.json`
 

@@ -272,6 +272,38 @@ pub fn mode_short(m: &str) -> String {
 }
 
 /// Énergie RAPL entre deux lectures (J) ; le compteur reboucle à `max`.
+/// What woke the machine: the interrupt the kernel remembers, named as in /proc/interrupts.
+pub fn wake_irq() -> String {
+    let Some(irq) = read_line("/sys/power/pm_wakeup_irq") else {
+        return "-".to_string();
+    };
+    let table = std::fs::read_to_string("/proc/interrupts").unwrap_or_default();
+    let row = table.lines().find(|l| l.trim_start().starts_with(&format!("{irq}:")));
+    let name = row.and_then(|l| l.split_whitespace().last()).unwrap_or("?");
+    format!("irq{irq}:{name}")
+}
+
+/// External USB devices and Type-C partners still there at wake-up.
+pub fn plugged() -> String {
+    let mut names = Vec::new();
+    for dev in dir_names("/sys/bus/usb/devices") {
+        if dev.contains(':') || dev.starts_with("usb") {
+            continue;
+        }
+        let base = format!("/sys/bus/usb/devices/{dev}");
+        if read_line(&format!("{base}/removable")).is_some_and(|r| r == "fixed") {
+            continue;
+        }
+        names.push(read_line(&format!("{base}/product")).unwrap_or(dev).replace([' ', '\t'], "_"));
+    }
+    names.extend(dir_names("/sys/class/typec").into_iter().filter(|p| p.ends_with("-partner")));
+    if names.is_empty() {
+        "rien".to_string()
+    } else {
+        names.join(",")
+    }
+}
+
 pub fn rapl_delta(cur: Option<f64>, prev: Option<f64>, max: f64) -> Option<f64> {
     let (c, p) = (cur?, prev?);
     let mut d = c - p;
