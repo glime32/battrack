@@ -72,6 +72,13 @@ Everything is counted **twice, side by side**: a BATTERY column and a PLUGGED-IN
 
 The extension is loaded from the checkout, so its files update in place (reopen the popup). If `manifest.json` changes, click reload in `chrome://extensions`.
 
+## Files
+
+- state: `~/.local/state/battrack/state.tsv` · live: `$XDG_RUNTIME_DIR/battrack/` (in RAM)
+- suspends: `~/.local/state/battrack/veilles.tsv`, one line per suspend of a minute or more (end, length, deep sleep, Wh, W, what woke the machine, what was plugged in)
+- services: `~/.config/systemd/user/battrack.service`, `battrack-maj.service`, `battrack-maj.timer`
+- native host: `~/.config/net.imput.helium/NativeMessagingHosts/com.glime.battrack.json`
+
 ## Uninstall
 
 ```sh
