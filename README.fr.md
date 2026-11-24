@@ -45,7 +45,7 @@ Extension : clic sur l'icône → CPU par onglet (live, 10 min, 1 h), RAM, watts
 
 Veille auto (activée par défaut, réglage en bas du panneau) : sur batterie, un onglet en arrière-plan qui dépasse 4 % d'un cœur deux minutes de suite est endormi. Jamais l'onglet affiché, un onglet qui joue du son, un onglet épinglé ni les sites en exception (claude.ai, Meet, Zoom, Discord, YouTube Music, SoundCloud au départ ; 🚫 en ajoute un).
 
-Sur batterie comme sur secteur, quand Helium n'a plus le focus depuis 10 minutes, les onglets cachés qui travaillent encore (plus de 0,2 % d'un cœur) sont endormis aussi, fichiers locaux compris. Restent éveillés les messageries (WhatsApp, Messages, Instagram, Snapchat, Discord, Messenger), le groupe d'onglets « Claude » de Claude in Chrome, un onglet qui a joué du son dans les 5 dernières minutes, et les mêmes exceptions. Helium ne décharge jamais de lui-même un fichier local, un site qui a le droit d'envoyer des notifications ou un onglet qui change son titre en arrière-plan ; l'extension, elle, le peut.
+Sur batterie comme sur secteur, quand Helium n'a plus le focus depuis 10 minutes, les onglets cachés qui travaillent encore (plus de 0,05 % d'un cœur) sont endormis aussi, fichiers locaux compris. Restent éveillés les messageries (WhatsApp, Messages, Instagram, Snapchat, Discord, Messenger), le groupe d'onglets « Claude » de Claude in Chrome, un onglet qui a joué du son dans les 5 dernières minutes, et les mêmes exceptions, sauf claude.ai qui s'endort aussi. Helium ne décharge jamais de lui-même un fichier local, un site qui a le droit d'envoyer des notifications ou un onglet qui change son titre en arrière-plan ; l'extension, elle, le peut.
 
 ## Ce qui est mesuré
 

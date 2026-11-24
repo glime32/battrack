@@ -10,13 +10,14 @@ const SEUIL = 4; // % d'un cœur, en moyenne sur la dernière minute
 const FOIS = 2; // passages de suite au-dessus du seuil avant la veille
 const QUITTE = 2 * 60e3; // onglet quitté depuis au moins 2 min
 const FOND = 10 * 60e3; // Helium sans le focus depuis 10 min
-const SEUIL_FOND = 0.2; // un onglet caché qui reste au-dessus travaille encore
+const SEUIL_FOND = 0.05; // vrai 0 % : laissé ; 0,1 % : endormi
 const SON = 5 * 60e3; // un onglet qui a joué du son il y a moins de 5 min est laissé
 const PERIODE = 1; // minutes entre deux passages, sur batterie
 const SECTEUR = 5;
 const GARDER = 8; // entrées gardées dans le journal du panneau
 const EXCEPTIONS = ['claude.ai', 'meet.google.com', 'zoom.us', 'discord.com', 'music.youtube.com', 'soundcloud.com'];
 const MESSAGERIES = ['web.whatsapp.com', 'messages.google.com', 'instagram.com', 'snapchat.com', 'discord.com', 'messenger.com'];
+const FOND_AUSSI = ['claude.ai']; // exceptions levées quand Helium est en fond
 const CLAUDE = /^(?:⌛|🔔|✅)?\s*Claude$/u;
 
 const site = (url) => {
@@ -130,7 +131,8 @@ async function passage() {
     if (claude.has(t.groupId) || !endormable(t.url || '')) continue;
     if (t.lastAccessed && maintenant - t.lastAccessed < QUITTE) continue;
     const h = site(t.url);
-    if (excepte(h, a.except)) continue;
+    const garde = excepte(h, a.except);
+    if (garde && !(fond >= FOND && excepte(h, FOND_AUSSI))) continue;
     let cpu = null;
     for (const c of cids.get(t.id) || []) {
       const v = parCid.get(c);
@@ -138,7 +140,7 @@ async function passage() {
     }
     if (cpu == null) continue;
     let dormir = false;
-    if (s.bat && cpu >= SEUIL) {
+    if (s.bat && cpu >= SEUIL && !garde) {
       suite[t.id] = (coups[t.id] || 0) + 1;
       dormir = suite[t.id] >= FOIS;
     }
@@ -152,7 +154,7 @@ async function passage() {
   }
 
   const total = onglets.length;
-  const dorment = onglets.filter((t) => t.discarded).length + endormis.length;
+  const dorment = onglets.filter((t) => t.discarded || t.status === 'unloaded').length + endormis.length;
   const geles = onglets.filter((t) => t.frozen && !t.discarded).length;
   const releve = `${new Date(maintenant).toLocaleString('sv-SE')}|${s.bat ? 'batterie' : 'secteur'}|fond ${Math.round(fond / 60e3)} min|${total} onglets|${dorment} endormis|${geles} gelés`;
   await chrome.storage.session.set({ coups: suite, son });

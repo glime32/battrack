@@ -356,7 +356,7 @@ function renderAuto() {
   const tr = document.createElement('tr');
   const etat = cell(
     auto.on
-      ? 'Activée : sur batterie, un onglet en arrière-plan à plus de 4 % pendant 2 min est endormi ; quand Helium n’a plus le focus depuis 10 min, les onglets cachés qui travaillent encore aussi, sauf les messageries (jamais l’onglet affiché, le son, les épinglés, le groupe Claude, les exceptions).'
+      ? 'Activée : sur batterie, un onglet en arrière-plan à plus de 4 % pendant 2 min est endormi ; quand Helium n’a plus le focus depuis 10 min, les onglets cachés qui travaillent encore aussi, conversations claude.ai comprises, sauf les messageries (jamais l’onglet affiché, le son, les épinglés, le groupe Claude, les exceptions).'
       : 'Coupée : aucun onglet n’est endormi automatiquement.',
     'l wrap'
   );

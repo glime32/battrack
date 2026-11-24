@@ -45,7 +45,7 @@ Extension: click the icon → CPU per tab (live, 10 min, 1 h), RAM, laptop watts
 
 Auto-sleep (on by default, toggle at the bottom of the popup): on battery, a background tab above 4 % of a core for two minutes in a row is discarded. Never the visible tab, a tab playing sound, a pinned tab or an excepted site (claude.ai, Meet, Zoom, Discord, YouTube Music, SoundCloud to start with; 🚫 adds one).
 
-On battery and on AC alike, once Helium has been unfocused for 10 minutes, hidden tabs that are still working (above 0.2 % of a core) are discarded too, local files included. Messaging sites (WhatsApp, Messages, Instagram, Snapchat, Discord, Messenger), the "Claude" tab group used by Claude in Chrome, a tab that played sound in the last 5 minutes and the same exceptions stay awake. Helium never discards a local file, a site allowed to send notifications or a tab that updates its title in the background on its own; the extension can.
+On battery and on AC alike, once Helium has been unfocused for 10 minutes, hidden tabs that are still working (above 0.05 % of a core) are discarded too, local files included. Messaging sites (WhatsApp, Messages, Instagram, Snapchat, Discord, Messenger), the "Claude" tab group used by Claude in Chrome, a tab that played sound in the last 5 minutes and the same exceptions stay awake, except claude.ai, which sleeps too. Helium never discards a local file, a site allowed to send notifications or a tab that updates its title in the background on its own; the extension can.
 
 ## What it measures
 
