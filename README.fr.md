@@ -47,6 +47,8 @@ Veille auto (activée par défaut, réglage en bas du panneau) : sur batterie, u
 
 Sur batterie comme sur secteur, quand Helium n'a plus le focus depuis 10 minutes, les onglets cachés qui travaillent encore (plus de 0,05 % d'un cœur) sont endormis aussi, fichiers locaux compris. Restent éveillés les messageries (WhatsApp, Messages, Instagram, Snapchat, Discord, Messenger), le groupe d'onglets « Claude » de Claude in Chrome, un onglet qui a joué du son dans les 5 dernières minutes, et les mêmes exceptions, sauf claude.ai qui s'endort aussi. Helium ne décharge jamais de lui-même un fichier local, un site qui a le droit d'envoyer des notifications ou un onglet qui change son titre en arrière-plan ; l'extension, elle, le peut.
 
+Discord (discord.com) : rien n'y est animé (emojis, avatars, décorations et autocollants affichés fixes, GIF en pause sauf si on clique dessus, ni transitions ni animations CSS), et un onglet Discord caché ou sans le focus depuis 2 minutes passe sur « Messages privés », qui ne suit ni le salon ouvert ni sa liste de membres. Il revient au salon dès qu'on le retrouve. Les notifications ne changent pas ; rien ne bouge si un son ou une vidéo joue.
+
 ## Ce qui est mesuré
 
 Tout est compté **deux fois en parallèle** : colonne BATTERIE et colonne SECTEUR.

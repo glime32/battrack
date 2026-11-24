@@ -47,6 +47,8 @@ Auto-sleep (on by default, toggle at the bottom of the popup): on battery, a bac
 
 On battery and on AC alike, once Helium has been unfocused for 10 minutes, hidden tabs that are still working (above 0.05 % of a core) are discarded too, local files included. Messaging sites (WhatsApp, Messages, Instagram, Snapchat, Discord, Messenger), the "Claude" tab group used by Claude in Chrome, a tab that played sound in the last 5 minutes and the same exceptions stay awake, except claude.ai, which sleeps too. Helium never discards a local file, a site allowed to send notifications or a tab that updates its title in the background on its own; the extension can.
 
+Discord (discord.com): nothing moves (emojis, avatars, decorations and stickers shown still, GIFs paused unless clicked, no CSS transitions or animations), and a Discord tab hidden or unfocused for 2 minutes switches to Direct Messages, which follows neither the open channel nor its member list. It goes back to the channel as soon as you return. Notifications are unchanged; nothing happens while sound or video is playing.
+
 ## What it measures
 
 Everything is counted **twice, side by side**: a BATTERY column and a PLUGGED-IN column.
