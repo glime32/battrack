@@ -144,6 +144,7 @@ pub fn run() -> i32 {
         let mut flags = String::new();
         let mut first = true;
         let mut alive = Vec::new();
+        let mut found: Vec<(i32, i32, u64, u64, u64)> = Vec::new();
         if let Ok(rd) = std::fs::read_dir("/proc") {
             for e in rd.flatten() {
                 let n = e.file_name();
@@ -160,36 +161,58 @@ pub fn run() -> i32 {
                 if f.len() < 22 {
                     continue;
                 }
-                let (ticks, start, rss) = (f[11] + f[12], f[19], f[21]);
-                alive.push((pid, start));
-                let (cid, kind) = cache
-                    .entry((pid, start))
-                    .or_insert_with(|| {
-                        let k = make_key(pid, &comm, false, &names);
-                        (k.cid, if k.kind.is_empty() { "?".into() } else { k.kind })
-                    })
-                    .clone();
-                if flags.is_empty() && kind == "gpu" {
-                    flags = gpu_flags(pid);
-                    if flags.is_empty() {
-                        flags.push('-');
-                    }
-                }
-                let none = ["null".to_string(), "null".to_string(), "null".to_string()];
-                let m = hist.get(&pid).unwrap_or(&none);
-                let _ = write!(
-                    out,
-                    "{}{{\"pid\":{pid},\"cid\":{cid},\"ty\":\"{}\",\"tk\":{ticks},\"age\":{:.1},\"rss\":{},\"m1\":{},\"m10\":{},\"m60\":{}}}",
-                    if first { "" } else { "," },
-                    json_str(&kind),
-                    boot - start as f64 / hz,
-                    rss * page_kb,
-                    m[0],
-                    m[1],
-                    m[2]
-                );
-                first = false;
+                found.push((pid, f[1] as i32, f[11] + f[12], f[19], f[21]));
             }
+        }
+        // Only the browser that started this host: other instances with the same name
+        // (headless runs, a second profile) would be counted as ours otherwise.
+        let parents: HashMap<i32, i32> = found.iter().map(|p| (p.0, p.1)).collect();
+        let root = std::os::unix::process::parent_id() as i32;
+        let ours = |mut pid: i32| {
+            for _ in 0..8 {
+                if pid == root {
+                    return true;
+                }
+                match parents.get(&pid) {
+                    Some(&pp) => pid = pp,
+                    None => return false,
+                }
+            }
+            false
+        };
+        let all = !parents.contains_key(&root);
+        for &(pid, _, ticks, start, rss) in &found {
+            if !all && !ours(pid) {
+                continue;
+            }
+            alive.push((pid, start));
+            let (cid, kind) = cache
+                .entry((pid, start))
+                .or_insert_with(|| {
+                    let k = make_key(pid, &comm, false, &names);
+                    (k.cid, if k.kind.is_empty() { "?".into() } else { k.kind })
+                })
+                .clone();
+            if flags.is_empty() && kind == "gpu" {
+                flags = gpu_flags(pid);
+                if flags.is_empty() {
+                    flags.push('-');
+                }
+            }
+            let none = ["null".to_string(), "null".to_string(), "null".to_string()];
+            let m = hist.get(&pid).unwrap_or(&none);
+            let _ = write!(
+                out,
+                "{}{{\"pid\":{pid},\"cid\":{cid},\"ty\":\"{}\",\"tk\":{ticks},\"age\":{:.1},\"rss\":{},\"m1\":{},\"m10\":{},\"m60\":{}}}",
+                if first { "" } else { "," },
+                json_str(&kind),
+                boot - start as f64 / hz,
+                rss * page_kb,
+                m[0],
+                m[1],
+                m[2]
+            );
+            first = false;
         }
         cache.retain(|k, _| alive.contains(k));
         let flags = if flags == "-" { String::new() } else { flags };

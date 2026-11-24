@@ -122,7 +122,12 @@ async function passage() {
   const claude = new Set((await chrome.tabGroups.query({})).filter((g) => CLAUDE.test(g.title || '')).map((g) => g.id));
 
   const parCid = new Map();
-  for (const p of s.procs) if (p.cid) parCid.set(p.cid, cpuDe(p, avant, s));
+  let helium = 0;
+  for (const p of s.procs) {
+    const v = cpuDe(p, avant, s);
+    helium += v ?? 0;
+    if (p.cid) parCid.set(p.cid, v);
+  }
 
   const suite = {};
   const endormis = [];
@@ -133,10 +138,16 @@ async function passage() {
     const h = site(t.url);
     const garde = excepte(h, a.except);
     if (garde && !(fond >= FOND && excepte(h, FOND_AUSSI))) continue;
+    // cpu : sa part des processus qu'il partage ; plein : ces processus entiers,
+    // pour que des onglets d'un même site ne passent pas tous sous le seuil
     let cpu = null;
+    let plein = 0;
     for (const c of cids.get(t.id) || []) {
       const v = parCid.get(c);
-      if (v != null) cpu = (cpu ?? 0) + v / (partage.get(c) || 1);
+      if (v != null) {
+        cpu = (cpu ?? 0) + v / (partage.get(c) || 1);
+        plein += v;
+      }
     }
     if (cpu == null) continue;
     let dormir = false;
@@ -144,7 +155,7 @@ async function passage() {
       suite[t.id] = (coups[t.id] || 0) + 1;
       dormir = suite[t.id] >= FOIS;
     }
-    if (fond >= FOND && cpu >= SEUIL_FOND && !excepte(h, MESSAGERIES) && maintenant - (t.lastAccessed || 0) >= FOND) dormir = true;
+    if (fond >= FOND && plein >= SEUIL_FOND && !excepte(h, MESSAGERIES) && maintenant - (t.lastAccessed || 0) >= FOND) dormir = true;
     if (!dormir) continue;
     try {
       await chrome.tabs.discard(t.id);
@@ -156,7 +167,7 @@ async function passage() {
   const total = onglets.length;
   const dorment = onglets.filter((t) => t.discarded || t.status === 'unloaded').length + endormis.length;
   const geles = onglets.filter((t) => t.frozen && !t.discarded).length;
-  const releve = `${new Date(maintenant).toLocaleString('sv-SE')}|${s.bat ? 'batterie' : 'secteur'}|fond ${Math.round(fond / 60e3)} min|${total} onglets|${dorment} endormis|${geles} gelés`;
+  const releve = `${new Date(maintenant).toLocaleString('sv-SE')}|${s.bat ? 'batterie' : 'secteur'}|fond ${Math.round(fond / 60e3)} min|${total} onglets|${dorment} endormis|${geles} gelés|Helium ${helium.toFixed(1)} %`;
   await chrome.storage.session.set({ coups: suite, son });
   await chrome.storage.local.set({ releve });
   if (endormis.length) {

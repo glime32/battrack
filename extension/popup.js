@@ -426,7 +426,7 @@ function buildLog() {
   const when = d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const pkg = s.pkgW != null ? ` (pkg ${s.pkgW.toFixed(1)} W)` : '';
   const pc = (s.bat && s.pw > 0 ? s.pw.toFixed(1) + ' W batterie' : s.psysW != null ? s.psysW.toFixed(1) + ' W secteur' : 'secteur') + pkg;
-  L.push(`### helium-tabs 1.2 · ${when} · ${tabs.length} onglets (${nd} en veille) · ${s.procs.length} proc · démon ${s.daemon ? 'oui' : 'NON'} · PC ${pc}`);
+  L.push(`### helium-tabs 1.3 · ${when} · ${tabs.length} onglets (${nd} en veille) · ${s.procs.length} proc · démon ${s.daemon ? 'oui' : 'NON'} · PC ${pc}`);
   L.push(`total Helium CPU%(1 cœur) live/10m/1h ${fmt(tot.live)}/${fmt(tot.m10)}/${fmt(tot.m60)} · RAM ${mb(tot.rss)}`);
   L.push('# live/10m/1h   RAM  site [a=audio p=épinglé v=affiché ≈=processus partagé]');
   const key = (r) => r.m10 ?? r.live ?? 0;
