@@ -1,26 +1,34 @@
 'use strict';
-// Veille auto : sur batterie, endort les onglets en arrière-plan qui mangent du CPU.
-// Réveillé une fois par minute par chrome.alarms, rien entre deux passages.
-// Sur secteur, le passage s'arrête dès la lecture de l'état de la batterie.
+// Veille auto. Sur batterie : endort les onglets en arrière-plan qui mangent du CPU.
+// Sur batterie comme sur secteur : quand Helium n'a plus le focus depuis 10 min,
+// endort aussi les onglets cachés qui travaillent encore un peu.
+// Réveillé par chrome.alarms (1 min sur batterie, 5 min sur secteur), rien entre deux passages.
 // À chaque passage, l'hôte reçoit aussi « processus → sites » pour le relevé des réveils.
 
 const HOST = 'com.glime.battrack';
 const SEUIL = 4; // % d'un cœur, en moyenne sur la dernière minute
 const FOIS = 2; // passages de suite au-dessus du seuil avant la veille
 const QUITTE = 2 * 60e3; // onglet quitté depuis au moins 2 min
+const FOND = 10 * 60e3; // Helium sans le focus depuis 10 min
+const SEUIL_FOND = 0.2; // un onglet caché qui reste au-dessus travaille encore
+const SON = 5 * 60e3; // un onglet qui a joué du son il y a moins de 5 min est laissé
 const PERIODE = 1; // minutes entre deux passages, sur batterie
-const SECTEUR = 5; // sur secteur, on repasse juste de temps en temps voir si c'est débranché
+const SECTEUR = 5;
 const GARDER = 8; // entrées gardées dans le journal du panneau
 const EXCEPTIONS = ['claude.ai', 'meet.google.com', 'zoom.us', 'discord.com', 'music.youtube.com', 'soundcloud.com'];
+const MESSAGERIES = ['web.whatsapp.com', 'messages.google.com', 'instagram.com', 'snapchat.com', 'discord.com', 'messenger.com'];
+const CLAUDE = /^(?:⌛|🔔|✅)?\s*Claude$/u;
 
 const site = (url) => {
   try {
-    return new URL(url).hostname.replace(/^www\./, '');
+    const u = new URL(url);
+    return u.protocol === 'file:' ? 'fichier' : u.hostname.replace(/^www\./, '');
   } catch {
     return '';
   }
 };
 const excepte = (h, liste) => liste.some((e) => h === e || h.endsWith('.' + e));
+const endormable = (url) => /^https?:/.test(url) || (url.startsWith('file:') && !/\/claude\/choix-[^/]*$/.test(url));
 
 async function reglages() {
   const { auto } = await chrome.storage.local.get('auto');
@@ -46,6 +54,23 @@ chrome.alarms.onAlarm.addListener((al) => {
   if (al.name === 'veille') passage().catch(() => {});
 });
 
+// Sous Linux, passer d'une fenêtre d'Helium à l'autre donne un NONE fugace :
+// seule la première perte du focus compte, le retour remet à zéro.
+chrome.windows.onFocusChanged.addListener(async (w) => {
+  if (w !== chrome.windows.WINDOW_ID_NONE) return chrome.storage.session.set({ fond: 0 });
+  const { fond = 0 } = await chrome.storage.session.get('fond');
+  if (!fond) await chrome.storage.session.set({ fond: Date.now() });
+});
+
+async function depuisFond(maintenant) {
+  const fenetres = await chrome.windows.getAll();
+  let { fond = 0 } = await chrome.storage.session.get('fond');
+  if (fenetres.some((w) => w.focused)) fond = 0;
+  else if (!fond) fond = maintenant;
+  await chrome.storage.session.set({ fond });
+  return fond ? maintenant - fond : 0;
+}
+
 // CPU d'un processus sur la dernière minute : écart de ticks avec le passage
 // précédent, sinon la moyenne 1 min du démon battrack.
 function cpuDe(p, avant, s) {
@@ -58,6 +83,7 @@ function cpuDe(p, avant, s) {
 async function passage() {
   const a = await reglages();
   if (!a.on) return;
+  const maintenant = Date.now();
   const onglets = await chrome.tabs.query({});
   const cids = new Map();
   const partage = new Map();
@@ -80,7 +106,7 @@ async function passage() {
   const liste = [...sites].map(([c, h]) => `${c}\t${[...h].join(', ')}`).sort().join('\n');
   const s = await chrome.runtime.sendNativeMessage(HOST, { cmd: 'snap', onglets: liste });
   if (!s || !s.procs) return;
-  const { avant = null, coups = {} } = await chrome.storage.session.get(['avant', 'coups']);
+  const { avant = null, coups = {}, son = {} } = await chrome.storage.session.get(['avant', 'coups', 'son']);
   const tk = {};
   for (const p of s.procs) tk[p.pid] = p.tk;
   await chrome.storage.session.set({ avant: { t: s.t, tk } });
@@ -89,20 +115,19 @@ async function passage() {
   const al = await chrome.alarms.get('veille');
   if (!al || al.periodInMinutes !== voulu) chrome.alarms.create('veille', { periodInMinutes: voulu });
 
-  if (!s.bat) {
-    if (Object.keys(coups).length) await chrome.storage.session.set({ coups: {} });
-    return;
-  }
+  const fond = await depuisFond(maintenant);
+  for (const t of onglets) if (t.audible) son[t.id] = maintenant;
+  for (const id in son) if (maintenant - son[id] > SON || !onglets.some((t) => t.id == id)) delete son[id];
+  const claude = new Set((await chrome.tabGroups.query({})).filter((g) => CLAUDE.test(g.title || '')).map((g) => g.id));
 
   const parCid = new Map();
   for (const p of s.procs) if (p.cid) parCid.set(p.cid, cpuDe(p, avant, s));
 
-  const maintenant = Date.now();
   const suite = {};
   const endormis = [];
   for (const t of onglets) {
-    if (t.discarded || t.active || t.audible || t.pinned || t.autoDiscardable === false) continue;
-    if (!/^https?:/.test(t.url || '')) continue;
+    if (t.discarded || t.active || t.audible || son[t.id] || t.pinned || t.autoDiscardable === false) continue;
+    if (claude.has(t.groupId) || !endormable(t.url || '')) continue;
     if (t.lastAccessed && maintenant - t.lastAccessed < QUITTE) continue;
     const h = site(t.url);
     if (excepte(h, a.except)) continue;
@@ -111,16 +136,27 @@ async function passage() {
       const v = parCid.get(c);
       if (v != null) cpu = (cpu ?? 0) + v / (partage.get(c) || 1);
     }
-    if (cpu == null || cpu < SEUIL) continue;
-    suite[t.id] = (coups[t.id] || 0) + 1;
-    if (suite[t.id] < FOIS) continue;
+    if (cpu == null) continue;
+    let dormir = false;
+    if (s.bat && cpu >= SEUIL) {
+      suite[t.id] = (coups[t.id] || 0) + 1;
+      dormir = suite[t.id] >= FOIS;
+    }
+    if (fond >= FOND && cpu >= SEUIL_FOND && !excepte(h, MESSAGERIES) && maintenant - (t.lastAccessed || 0) >= FOND) dormir = true;
+    if (!dormir) continue;
     try {
       await chrome.tabs.discard(t.id);
       delete suite[t.id];
       endormis.push({ site: h, titre: t.title || h, cpu: Math.round(cpu * 10) / 10, quand: maintenant });
     } catch {}
   }
-  await chrome.storage.session.set({ coups: suite });
+
+  const total = onglets.length;
+  const dorment = onglets.filter((t) => t.discarded).length + endormis.length;
+  const geles = onglets.filter((t) => t.frozen && !t.discarded).length;
+  const releve = `${new Date(maintenant).toLocaleString('sv-SE')}|${s.bat ? 'batterie' : 'secteur'}|fond ${Math.round(fond / 60e3)} min|${total} onglets|${dorment} endormis|${geles} gelés`;
+  await chrome.storage.session.set({ coups: suite, son });
+  await chrome.storage.local.set({ releve });
   if (endormis.length) {
     const b = await reglages();
     b.log = [...endormis, ...(b.log || [])].slice(0, GARDER);

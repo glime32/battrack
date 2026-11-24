@@ -319,9 +319,11 @@ function render() {
   }
 }
 
-/* ---------- veille auto sur batterie (réglages lus et écrits ici, travail dans auto.js) ---------- */
+/* ---------- veille auto (réglages lus et écrits ici, travail dans auto.js) ---------- */
 
 let auto = null;
+let releve = '';
+chrome.storage.local.get('releve').then((r) => (releve = r.releve || ''));
 
 function ilya(ms) {
   const m = Math.round((Date.now() - ms) / 60e3);
@@ -354,7 +356,7 @@ function renderAuto() {
   const tr = document.createElement('tr');
   const etat = cell(
     auto.on
-      ? 'Activée : un onglet en arrière-plan à plus de 4 % pendant 2 min est endormi (jamais l’onglet affiché, le son, les épinglés, les exceptions).'
+      ? 'Activée : sur batterie, un onglet en arrière-plan à plus de 4 % pendant 2 min est endormi ; quand Helium n’a plus le focus depuis 10 min, les onglets cachés qui travaillent encore aussi, sauf les messageries (jamais l’onglet affiché, le son, les épinglés, le groupe Claude, les exceptions).'
       : 'Coupée : aucun onglet n’est endormi automatiquement.',
     'l wrap'
   );
@@ -424,7 +426,7 @@ function buildLog() {
   const when = d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const pkg = s.pkgW != null ? ` (pkg ${s.pkgW.toFixed(1)} W)` : '';
   const pc = (s.bat && s.pw > 0 ? s.pw.toFixed(1) + ' W batterie' : s.psysW != null ? s.psysW.toFixed(1) + ' W secteur' : 'secteur') + pkg;
-  L.push(`### helium-tabs 1.1 · ${when} · ${tabs.length} onglets (${nd} en veille) · ${s.procs.length} proc · démon ${s.daemon ? 'oui' : 'NON'} · PC ${pc}`);
+  L.push(`### helium-tabs 1.2 · ${when} · ${tabs.length} onglets (${nd} en veille) · ${s.procs.length} proc · démon ${s.daemon ? 'oui' : 'NON'} · PC ${pc}`);
   L.push(`total Helium CPU%(1 cœur) live/10m/1h ${fmt(tot.live)}/${fmt(tot.m10)}/${fmt(tot.m60)} · RAM ${mb(tot.rss)}`);
   L.push('# live/10m/1h   RAM  site [a=audio p=épinglé v=affiché ≈=processus partagé]');
   const key = (r) => r.m10 ?? r.live ?? 0;
@@ -440,6 +442,7 @@ function buildLog() {
   if (auto) {
     const v = (auto.log || []).map((e) => `${e.site} ${fmt(e.cpu)} (${ilya(e.quand)})`).join(' · ');
     L.push(`veille auto: ${auto.on ? 'oui' : 'NON'}${v ? ' · ' + v : ''}`);
+    if (releve) L.push('dernier passage: ' + releve);
   }
   L.push('### fin');
   return L.join('\n');

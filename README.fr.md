@@ -45,6 +45,8 @@ Extension : clic sur l'icône → CPU par onglet (live, 10 min, 1 h), RAM, watts
 
 Veille auto (activée par défaut, réglage en bas du panneau) : sur batterie, un onglet en arrière-plan qui dépasse 4 % d'un cœur deux minutes de suite est endormi. Jamais l'onglet affiché, un onglet qui joue du son, un onglet épinglé ni les sites en exception (claude.ai, Meet, Zoom, Discord, YouTube Music, SoundCloud au départ ; 🚫 en ajoute un).
 
+Sur batterie comme sur secteur, quand Helium n'a plus le focus depuis 10 minutes, les onglets cachés qui travaillent encore (plus de 0,2 % d'un cœur) sont endormis aussi, fichiers locaux compris. Restent éveillés les messageries (WhatsApp, Messages, Instagram, Snapchat, Discord, Messenger), le groupe d'onglets « Claude » de Claude in Chrome, un onglet qui a joué du son dans les 5 dernières minutes, et les mêmes exceptions. Helium ne décharge jamais de lui-même un fichier local, un site qui a le droit d'envoyer des notifications ou un onglet qui change son titre en arrière-plan ; l'extension, elle, le peut.
+
 ## Ce qui est mesuré
 
 Tout est compté **deux fois en parallèle** : colonne BATTERIE et colonne SECTEUR.
@@ -63,7 +65,7 @@ Tout est compté **deux fois en parallèle** : colonne BATTERIE et colonne SECTE
 
 - Démon : 1 réveil / minute, ~4 ms CPU par réveil (≈ 0,007 % d'un cœur), ~3 Mo RAM,
   SCHED_IDLE + nice 19, timer slack 2 s, écriture disque toutes les 15 min sur batterie (le reste en RAM).
-- Extension : panneau fermé, la veille auto se réveille une fois par minute sur batterie, une fois toutes les 5 min sur secteur (juste le temps de lire l'état de la batterie). Panneau ouvert : une lecture de /proc toutes les 2 s.
+- Extension : panneau fermé, la veille auto se réveille une fois par minute sur batterie, une fois toutes les 5 min sur secteur (lecture de l'état de la batterie, et du focus d'Helium). Panneau ouvert : une lecture de /proc toutes les 2 s.
 - Mise à jour auto : un `git fetch` par heure.
 
 ## Mise à jour auto
