@@ -2,6 +2,7 @@
 // Veille auto : sur batterie, endort les onglets en arrière-plan qui mangent du CPU.
 // Réveillé une fois par minute par chrome.alarms, rien entre deux passages.
 // Sur secteur, le passage s'arrête dès la lecture de l'état de la batterie.
+// À chaque passage, l'hôte reçoit aussi « processus → sites » pour le relevé des réveils.
 
 const HOST = 'com.glime.battrack';
 const SEUIL = 4; // % d'un cœur, en moyenne sur la dernière minute
@@ -57,7 +58,27 @@ function cpuDe(p, avant, s) {
 async function passage() {
   const a = await reglages();
   if (!a.on) return;
-  const s = await chrome.runtime.sendNativeMessage(HOST, { cmd: 'snap' });
+  const onglets = await chrome.tabs.query({});
+  const cids = new Map();
+  const partage = new Map();
+  const sites = new Map();
+  for (const t of onglets) {
+    if (t.discarded) continue;
+    let fr = [];
+    try {
+      fr = (await chrome.webNavigation.getAllFrames({ tabId: t.id })) || [];
+    } catch {}
+    const l = [...new Set(fr.map((f) => f.processId).filter((x) => x > 0))];
+    cids.set(t.id, l);
+    for (const c of l) {
+      partage.set(c, (partage.get(c) || 0) + 1);
+      const h = site(t.url);
+      if (h) sites.set(c, (sites.get(c) || new Set()).add(h));
+    }
+  }
+
+  const liste = [...sites].map(([c, h]) => `${c}\t${[...h].join(', ')}`).sort().join('\n');
+  const s = await chrome.runtime.sendNativeMessage(HOST, { cmd: 'snap', onglets: liste });
   if (!s || !s.procs) return;
   const { avant = null, coups = {} } = await chrome.storage.session.get(['avant', 'coups']);
   const tk = {};
@@ -75,20 +96,6 @@ async function passage() {
 
   const parCid = new Map();
   for (const p of s.procs) if (p.cid) parCid.set(p.cid, cpuDe(p, avant, s));
-
-  const onglets = await chrome.tabs.query({});
-  const cids = new Map();
-  const partage = new Map();
-  for (const t of onglets) {
-    if (t.discarded) continue;
-    let fr = [];
-    try {
-      fr = (await chrome.webNavigation.getAllFrames({ tabId: t.id })) || [];
-    } catch {}
-    const l = [...new Set(fr.map((f) => f.processId).filter((x) => x > 0))];
-    cids.set(t.id, l);
-    for (const c of l) partage.set(c, (partage.get(c) || 0) + 1);
-  }
 
   const maintenant = Date.now();
   const suite = {};

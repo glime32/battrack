@@ -72,6 +72,32 @@ fn daemon_history(path: &str) -> (bool, HashMap<i32, [String; 3]>) {
     (daemon, map)
 }
 
+/// « processus de rendu → sites » envoyé par l'extension, pour le relevé des réveils
+/// (reveil-releve) qui ne sait pas quel onglet vit dans quel processus.
+fn save_tabs(body: &[u8], path: &str) {
+    let b = String::from_utf8_lossy(body);
+    let Some(i) = b.find("\"onglets\"") else { return };
+    let Some(v) = b[i + 9..].trim_start().strip_prefix(':').map(str::trim_start).and_then(|v| v.strip_prefix('"')) else { return };
+    let mut out = String::new();
+    let mut it = v.chars();
+    loop {
+        match it.next() {
+            Some('"') => break,
+            Some('\\') => match it.next() {
+                Some('t') => out.push('\t'),
+                Some('n') => out.push('\n'),
+                Some(c) => out.push(c),
+                None => return,
+            },
+            Some(c) => out.push(c),
+            None => return,
+        }
+    }
+    if std::fs::read_to_string(path).ok().as_deref() != Some(out.as_str()) {
+        write_atomic(path, &out);
+    }
+}
+
 pub fn run() -> i32 {
     let parent = read_line(&format!("/proc/{}/comm", std::os::unix::process::parent_id())).unwrap_or_default();
     let browsers = browsers_from_env();
@@ -98,6 +124,7 @@ pub fn run() -> i32 {
         if stdin.read_exact(&mut body).is_err() {
             return 0;
         }
+        save_tabs(&body, &paths.tabs);
         let (daemon, hist) = daemon_history(&paths.browser);
         let mut s = Sys::default();
         hw.read_bat(&mut s);

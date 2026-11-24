@@ -76,6 +76,7 @@ The extension is loaded from the checkout, so its files update in place (reopen 
 
 - state: `~/.local/state/battrack/state.tsv` · live: `$XDG_RUNTIME_DIR/battrack/` (in RAM)
 - suspends: `~/.local/state/battrack/veilles.tsv`, one line per suspend of a minute or more (end, length, deep sleep, Wh, W, what woke the machine, what was plugged in)
+- tabs: `$XDG_RUNTIME_DIR/battrack/onglets.tsv`, "renderer process → sites" left by the extension on each pass (sites only, no titles), for a script run on resume
 - services: `~/.config/systemd/user/battrack.service`, `battrack-maj.service`, `battrack-maj.timer`
 - native host: `~/.config/net.imput.helium/NativeMessagingHosts/com.glime.battrack.json`
 

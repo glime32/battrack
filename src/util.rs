@@ -127,6 +127,7 @@ pub struct Paths {
     pub state: String,
     pub pid: String,
     pub browser: String,
+    pub tabs: String,
     pub now: String,
 }
 
@@ -145,6 +146,7 @@ impl Paths {
             state: format!("{state_dir}/state.tsv"),
             pid: format!("{run_dir}/daemon.pid"),
             browser: format!("{run_dir}/browser.tsv"),
+            tabs: format!("{run_dir}/onglets.tsv"),
             now: format!("{run_dir}/now.txt"),
             state_dir,
             run_dir,
