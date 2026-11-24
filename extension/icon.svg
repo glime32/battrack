@@ -1,7 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
-  <rect x="8" y="8" width="112" height="112" rx="26" fill="#2f6fed"/>
-  <rect x="30" y="40" width="62" height="48" rx="8" fill="none" stroke="#fff" stroke-width="8"/>
-  <rect x="94" y="54" width="8" height="20" rx="3" fill="#fff"/>
-  <rect x="40" y="50" width="16" height="28" rx="3" fill="#fff"/>
-  <rect x="60" y="50" width="12" height="28" rx="3" fill="#fff" opacity=".55"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="-7.35483870967742 -7.35483870967742 38.70967741935484 38.70967741935484">
+<defs><filter id="l" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.1" result="f"/><feFlood flood-color="#9b30ff" flood-opacity=".9"/><feComposite in2="f" operator="in"/><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<rect x="-7.128024193548388" y="-7.128024193548388" width="38.256048387096776" height="38.256048387096776"
+ rx="8.516129032258064" fill="#000" stroke="#61008A" stroke-width="0.4536290322580645"/>
+<g fill="none" stroke="#c09cf2" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"
+ filter="url(#l)"><path d="M6 7h11a2 2 0 0 1 2 2v.5a.5 .5 0 0 0 .5 .5a.5 .5 0 0 1 .5 .5v3a.5 .5 0 0 1 -.5 .5a.5 .5 0 0 0 -.5 .5v.5a2 2 0 0 1 -2 2h-11a2 2 0 0 1 -2 -2v-6a2 2 0 0 1 2 -2" />
+  <path d="M7 10l0 4" />
+  <path d="M10 10l0 4" />
+  <path d="M13 10l0 4" /></g></svg>
