@@ -1,8 +1,8 @@
 'use strict';
-// Veille auto. Sur batterie : endort les onglets en arrière-plan qui mangent du CPU.
-// Sur batterie comme sur secteur : quand Helium n'a plus le focus depuis 10 min,
-// endort aussi les onglets cachés qui travaillent encore un peu.
-// Réveillé par chrome.alarms (1 min sur batterie, 5 min sur secteur), rien entre deux passages.
+// Veille auto, sur batterie comme sur secteur : endort les onglets en arrière-plan
+// qui mangent du CPU, et quand Helium n'a plus le focus depuis 10 min, ceux qui
+// travaillent encore un peu. Réveillé une fois par minute par chrome.alarms.
+// Se recharge seule quand sa version change sur le disque.
 // À chaque passage, l'hôte reçoit aussi « processus → sites » pour le relevé des réveils.
 
 const HOST = 'com.glime.battrack';
@@ -12,8 +12,7 @@ const QUITTE = 2 * 60e3; // onglet quitté depuis au moins 2 min
 const FOND = 10 * 60e3; // Helium sans le focus depuis 10 min
 const SEUIL_FOND = 0.05; // vrai 0 % : laissé ; 0,1 % : endormi
 const SON = 5 * 60e3; // un onglet qui a joué du son il y a moins de 5 min est laissé
-const PERIODE = 1; // minutes entre deux passages, sur batterie
-const SECTEUR = 5;
+const PERIODE = 1; // minutes entre deux passages
 const GARDER = 8; // entrées gardées dans le journal du panneau
 const EXCEPTIONS = ['claude.ai', 'meet.google.com', 'zoom.us', 'discord.com', 'music.youtube.com', 'soundcloud.com'];
 const MESSAGERIES = ['web.whatsapp.com', 'messages.google.com', 'instagram.com', 'snapchat.com', 'discord.com', 'messenger.com'];
@@ -39,6 +38,23 @@ async function reglages() {
   return neuf;
 }
 
+// les onglets Discord déjà ouverts reçoivent le script sans avoir à être rechargés
+async function discord() {
+  for (const t of await chrome.tabs.query({ url: 'https://discord.com/*' })) {
+    if (t.discarded) continue;
+    const target = { tabId: t.id };
+    chrome.scripting.insertCSS({ target, files: ['discord.css'] }).catch(() => {});
+    chrome.scripting.executeScript({ target, files: ['discord.js'] }).catch(() => {});
+  }
+}
+
+async function aJour() {
+  try {
+    const r = await fetch(chrome.runtime.getURL('manifest.json'), { cache: 'no-store' });
+    if ((await r.json()).version !== chrome.runtime.getManifest().version) chrome.runtime.reload();
+  } catch {}
+}
+
 async function armer() {
   const a = await reglages();
   if (!a.on) return chrome.alarms.clear('veille');
@@ -46,7 +62,10 @@ async function armer() {
   if (!deja) chrome.alarms.create('veille', { periodInMinutes: PERIODE });
 }
 
-chrome.runtime.onInstalled.addListener(armer);
+chrome.runtime.onInstalled.addListener(() => {
+  armer();
+  discord();
+});
 chrome.runtime.onStartup.addListener(armer);
 chrome.storage.onChanged.addListener((ch, zone) => {
   if (zone === 'local' && ch.auto && ch.auto.newValue?.on !== ch.auto.oldValue?.on) armer();
@@ -82,6 +101,7 @@ function cpuDe(p, avant, s) {
 }
 
 async function passage() {
+  await aJour();
   const a = await reglages();
   if (!a.on) return;
   const maintenant = Date.now();
@@ -112,9 +132,8 @@ async function passage() {
   for (const p of s.procs) tk[p.pid] = p.tk;
   await chrome.storage.session.set({ avant: { t: s.t, tk } });
 
-  const voulu = s.bat ? PERIODE : SECTEUR;
   const al = await chrome.alarms.get('veille');
-  if (!al || al.periodInMinutes !== voulu) chrome.alarms.create('veille', { periodInMinutes: voulu });
+  if (!al || al.periodInMinutes !== PERIODE) chrome.alarms.create('veille', { periodInMinutes: PERIODE });
 
   const fond = await depuisFond(maintenant);
   for (const t of onglets) if (t.audible) son[t.id] = maintenant;
@@ -151,7 +170,7 @@ async function passage() {
     }
     if (cpu == null) continue;
     let dormir = false;
-    if (s.bat && cpu >= SEUIL && !garde) {
+    if (cpu >= SEUIL && !garde) {
       suite[t.id] = (coups[t.id] || 0) + 1;
       dormir = suite[t.id] >= FOIS;
     }

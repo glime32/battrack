@@ -356,7 +356,7 @@ function renderAuto() {
   const tr = document.createElement('tr');
   const etat = cell(
     auto.on
-      ? 'Activée : sur batterie, un onglet en arrière-plan à plus de 4 % pendant 2 min est endormi ; quand Helium n’a plus le focus depuis 10 min, les onglets cachés qui travaillent encore aussi, conversations claude.ai comprises, sauf les messageries (jamais l’onglet affiché, le son, les épinglés, le groupe Claude, les exceptions).'
+      ? 'Activée : un onglet en arrière-plan à plus de 4 % pendant 2 min est endormi ; quand Helium n’a plus le focus depuis 10 min, les onglets cachés qui travaillent encore aussi, conversations claude.ai comprises, sauf les messageries (jamais l’onglet affiché, le son, les épinglés, le groupe Claude, les exceptions).'
       : 'Coupée : aucun onglet n’est endormi automatiquement.',
     'l wrap'
   );
@@ -426,7 +426,7 @@ function buildLog() {
   const when = d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
   const pkg = s.pkgW != null ? ` (pkg ${s.pkgW.toFixed(1)} W)` : '';
   const pc = (s.bat && s.pw > 0 ? s.pw.toFixed(1) + ' W batterie' : s.psysW != null ? s.psysW.toFixed(1) + ' W secteur' : 'secteur') + pkg;
-  L.push(`### helium-tabs 1.4 · ${when} · ${tabs.length} onglets (${nd} en veille) · ${s.procs.length} proc · démon ${s.daemon ? 'oui' : 'NON'} · PC ${pc}`);
+  L.push(`### helium-tabs 1.5 · ${when} · ${tabs.length} onglets (${nd} en veille) · ${s.procs.length} proc · démon ${s.daemon ? 'oui' : 'NON'} · PC ${pc}`);
   L.push(`total Helium CPU%(1 cœur) live/10m/1h ${fmt(tot.live)}/${fmt(tot.m10)}/${fmt(tot.m60)} · RAM ${mb(tot.rss)}`);
   L.push('# live/10m/1h   RAM  site [a=audio p=épinglé v=affiché ≈=processus partagé]');
   const key = (r) => r.m10 ?? r.live ?? 0;

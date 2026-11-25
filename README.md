@@ -43,7 +43,7 @@ Trade-off: unprivileged energy readings make power side channels (Platypus) poss
 
 Extension: click the icon → CPU per tab (live, 10 min, 1 h), RAM, laptop watts, 💤 to discard a tab, **📋 Copy log**.
 
-Auto-sleep (on by default, toggle at the bottom of the popup): on battery, a background tab above 4 % of a core for two minutes in a row is discarded. Never the visible tab, a tab playing sound, a pinned tab or an excepted site (claude.ai, Meet, Zoom, Discord, YouTube Music, SoundCloud to start with; 🚫 adds one).
+Auto-sleep (on by default, toggle at the bottom of the popup): on battery and on AC, a background tab above 4 % of a core for two minutes in a row is discarded. Never the visible tab, a tab playing sound, a pinned tab or an excepted site (claude.ai, Meet, Zoom, Discord, YouTube Music, SoundCloud to start with; 🚫 adds one).
 
 On battery and on AC alike, once Helium has been unfocused for 10 minutes, hidden tabs that are still working (above 0.05 % of a core) are discarded too, local files included. Messaging sites (WhatsApp, Messages, Instagram, Snapchat, Discord, Messenger), the "Claude" tab group used by Claude in Chrome, a tab that played sound in the last 5 minutes and the same exceptions stay awake, except claude.ai, which sleeps too. Helium never discards a local file, a site allowed to send notifications or a tab that updates its title in the background on its own; the extension can.
 
@@ -67,7 +67,7 @@ Everything is counted **twice, side by side**: a BATTERY column and a PLUGGED-IN
 
 - Daemon: one wakeup per minute, ~4 ms CPU each (≈ 0.007 % of a core), ~3 MB RAM,
   SCHED_IDLE + nice 19, 2 s timer slack, disk write every 15 min on battery (live data stays in RAM).
-- Extension: popup closed, auto-sleep wakes once a minute on battery and once every 5 min on AC (it reads the battery state and checks whether Helium has been unfocused for 10 min). Popup open: one /proc read every 2 s.
+- Extension: popup closed, auto-sleep wakes once a minute. When its version changes on disk (after a `git pull`), it reloads itself and hands its script to Discord tabs that are already open. Popup open: one /proc read every 2 s.
 - Auto-update: one `git fetch` per hour.
 
 ## Auto-update
