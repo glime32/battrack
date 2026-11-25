@@ -4,6 +4,12 @@
 // 10 min / 1 h vient du démon. La veille auto sur batterie vit dans auto.js.
 
 const HOST = 'com.glime.battrack';
+
+// le code de fond ne change qu'au rechargement : le panneau, relu à chaque ouverture, s'en charge
+fetch(chrome.runtime.getURL('manifest.json'), { cache: 'no-store' })
+  .then((r) => r.json())
+  .then((m) => m.version !== chrome.runtime.getManifest().version && chrome.runtime.reload())
+  .catch(() => {});
 const $ = (s) => document.querySelector(s);
 
 let port = null;
