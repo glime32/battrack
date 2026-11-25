@@ -5,7 +5,7 @@ use crate::procs::Apps;
 use crate::util::*;
 
 pub const NHIST: usize = 600;
-pub const MAXMODE: usize = 8;
+pub const MAXMODE: usize = 16;
 pub const MAXSESS: usize = 8;
 
 #[derive(Clone)]
