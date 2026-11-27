@@ -1,7 +1,7 @@
 'use strict';
 // Veille auto, sur batterie comme sur secteur : endort les onglets en arrière-plan
 // qui mangent du CPU, et quand Helium n'a plus le focus depuis 10 min, ceux qui
-// travaillent encore un peu. Réveillé une fois par minute par chrome.alarms.
+// travaillent encore un peu, et ceux qu'on n'a pas regardés depuis 30 min. Réveillé une fois par minute par chrome.alarms.
 // Se recharge seule quand sa version change sur le disque.
 // À chaque passage, l'hôte reçoit aussi « processus → sites » pour le relevé des réveils.
 
@@ -11,12 +11,14 @@ const FOIS = 2; // passages de suite au-dessus du seuil avant la veille
 const QUITTE = 2 * 60e3; // onglet quitté depuis au moins 2 min
 const FOND = 10 * 60e3; // Helium sans le focus depuis 10 min
 const SEUIL_FOND = 0.05; // vrai 0 % : laissé ; 0,1 % : endormi
+const LONGTEMPS = 30 * 60e3; // onglet pas regardé depuis 30 min : endormi même à 0 %
 const SON = 5 * 60e3; // un onglet qui a joué du son il y a moins de 5 min est laissé
 const PERIODE = 1; // minutes entre deux passages
 const GARDER = 8; // entrées gardées dans le journal du panneau
 const EXCEPTIONS = ['claude.ai', 'meet.google.com', 'zoom.us', 'discord.com', 'music.youtube.com', 'soundcloud.com'];
 const MESSAGERIES = ['web.whatsapp.com', 'messages.google.com', 'instagram.com', 'snapchat.com', 'discord.com', 'messenger.com'];
 const FOND_AUSSI = ['claude.ai']; // exceptions levées quand Helium est en fond
+const JAMAIS_VIEUX = ['claude.ai', 'keep.google.com']; // jamais endormis parce que vieux
 const CLAUDE = /^(?:⌛|🔔|✅)?\s*Claude$/u;
 
 const site = (url) => {
@@ -29,6 +31,28 @@ const site = (url) => {
 };
 const excepte = (h, liste) => liste.some((e) => h === e || h.endsWith('.' + e));
 const endormable = (url) => /^https?:/.test(url) || (url.startsWith('file:') && !/\/claude\/choix-[^/]*$/.test(url));
+
+// un champ tapé et pas envoyé : l'onglet reste. Pas de réponse en 2 s (page gelée,
+// page interdite à l'extension) : il reste aussi.
+function tape() {
+  for (const e of document.querySelectorAll('input, textarea, select')) {
+    if (e.disabled || e.readOnly || e.type === 'hidden') continue;
+    if (e.tagName === 'SELECT') {
+      const defaut = Math.max(0, [...e.options].findIndex((o) => o.defaultSelected));
+      if (!e.multiple && e.options.length && e.selectedIndex !== defaut) return true;
+    } else if (e.type === 'checkbox' || e.type === 'radio') {
+      if (e.checked !== e.defaultChecked) return true;
+    } else if (!/^(button|submit|reset|image)$/.test(e.type) && e.value && e.value !== e.defaultValue) return true;
+  }
+  const a = document.activeElement;
+  return !!(a && a.isContentEditable && a.textContent.trim());
+}
+
+async function formulaire(id) {
+  const essai = chrome.scripting.executeScript({ target: { tabId: id }, func: tape }).then((r) => r[0]?.result !== false);
+  const delai = new Promise((ok) => setTimeout(() => ok(true), 2000));
+  return Promise.race([essai, delai]).catch(() => true);
+}
 
 async function reglages() {
   const { auto } = await chrome.storage.local.get('auto');
@@ -175,6 +199,8 @@ async function passage() {
       dormir = suite[t.id] >= FOIS;
     }
     if (fond >= FOND && plein >= SEUIL_FOND && !excepte(h, MESSAGERIES) && maintenant - (t.lastAccessed || 0) >= FOND) dormir = true;
+    if (!dormir && !garde && !t.frozen && t.lastAccessed && maintenant - t.lastAccessed >= LONGTEMPS &&
+        !excepte(h, JAMAIS_VIEUX) && !excepte(h, MESSAGERIES) && !(await formulaire(t.id))) dormir = true;
     if (!dormir) continue;
     try {
       await chrome.tabs.discard(t.id);
