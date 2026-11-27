@@ -17,7 +17,7 @@ const PERIODE = 1; // minutes entre deux passages
 const GARDER = 8; // entrées gardées dans le journal du panneau
 const EXCEPTIONS = ['claude.ai', 'meet.google.com', 'zoom.us', 'discord.com', 'music.youtube.com', 'soundcloud.com'];
 const MESSAGERIES = ['web.whatsapp.com', 'messages.google.com', 'instagram.com', 'snapchat.com', 'discord.com', 'messenger.com'];
-const FOND_AUSSI = ['claude.ai']; // exceptions levées quand Helium est en fond
+const FOND_AUSSI = []; // exceptions levées quand Helium est en fond (claude.ai retiré le 27/11, sa réponse CL2a : se recharger rame sur batterie)
 const JAMAIS_VIEUX = ['claude.ai', 'keep.google.com']; // jamais endormis parce que vieux
 const CLAUDE = /^(?:⌛|🔔|✅)?\s*Claude$/u;
 
